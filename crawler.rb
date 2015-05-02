@@ -54,6 +54,8 @@ get '/' do
 
   departments.keys.each_with_index do |dep_code, index|
 
+    Thread.list.last.join if Thread.list.count > (ENV['MAX_THREADS'] || 50)
+
     threads << Thread.new do
       begin
         respond = RestClient.get url, :params => url_params_for_department(dep_code)
