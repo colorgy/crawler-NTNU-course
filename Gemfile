@@ -8,3 +8,5 @@ gem 'ruby-progressbar'
 
 gem 'sinatra'
 gem 'dotenv'
+
+gem 'puma'
