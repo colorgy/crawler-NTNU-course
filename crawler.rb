@@ -66,11 +66,11 @@ get '/' do
         redo
       end
 
-      course_detial_threads = []
+      course_detail_threads = []
 
       respond['List'].each do |course|
 
-        course_detial_threads << Thread.new do
+        course_detail_threads << Thread.new do
 
           # begin
           #   respond = RestClient.get syllabus_url, :params => url_params_for_course(course)
@@ -85,7 +85,7 @@ get '/' do
         end
       end
 
-      ThreadsWait.all_waits(*course_detial_threads)
+      ThreadsWait.all_waits(*course_detail_threads)
 
       done_departments_count += 1
       puts "(#{done_departments_count}/#{departments.count}) done #{dep_code}"
