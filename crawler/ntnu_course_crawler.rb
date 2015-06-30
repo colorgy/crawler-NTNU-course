@@ -1,11 +1,9 @@
+require 'json'
+require 'crawler_rocks'
+require 'pry'
+
 require 'thread'
 require 'thwait'
-
-require 'json'
-
-require 'crawler_rocks'
-
-require 'pry'
 
 class NtnuCourseCrawler
 
