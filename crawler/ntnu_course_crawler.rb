@@ -389,8 +389,7 @@ class NtnuCourseCrawler
           @update_threads.count < (ENV['MAX_THREADS'] || 30)
         )
         @update_threads << Thread.new do
-          print "#{course[:name]}\n"
-          after_each_proc.call(course: course) if @after_each_proc
+          @after_each_proc.call(course: course) if @after_each_proc
         end
       end
       ThreadsWait.all_waits(*@update_threads)
