@@ -1,12 +1,7 @@
 source 'https://rubygems.org'
 
-gem 'json'
-gem 'rest_client'
-gem 'nokogiri'
+gem 'crawler_rocks'
+gem 'web_task_runner'
+
 gem 'pry'
 gem 'ruby-progressbar'
-
-gem 'sinatra'
-gem 'dotenv'
-
-gem 'puma'
