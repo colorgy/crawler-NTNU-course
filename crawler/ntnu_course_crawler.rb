@@ -19,6 +19,36 @@ class NtnuCourseCrawler
     "日" => 7,
   }
 
+  NTUST_DAYS = {
+    # 118 style
+    "M" => 1,
+    "F" => 5,
+    "T" => 2,
+    "S" => 6,
+    "W" => 3,
+    "U" => 7,
+    "R" => 4
+  }
+
+  PERIODS = {
+    "0" => 1,
+    "1" => 2,
+    "2" => 3,
+    "3" => 4,
+    "4" => 5,
+    "5" => 6,
+    "6" => 7,
+    "7" => 8,
+    "8" => 9,
+    "9" => 10,
+    "10" => 11,
+    "A" => 12,
+    "B" => 13,
+    "C" => 14,
+    "D" => 15,
+    "X" => 11,
+  }
+
   DEPARTMENTS = {
     "GU" => "通識",
     "CU" => "共同科",
@@ -329,22 +359,53 @@ class NtnuCourseCrawler
       @update_threads = []
 
       courses.each do |course|
-        # course["time_inf"] = '一 9-10 本部 音樂系演奏廳,五 9-10 本部 音樂系演奏廳,'
+
         course_days = []
         course_periods = []
         course_locations = []
-        course["time_inf"].split(',').each do |time_info|
-          time_info.match(/(?<d>[#{DAYS.keys.join}]) (?<p>[\d|\-]+) (?<loc>.+)/) do |m|
-            ps = m[:p].split('-')
-            _start = ps[0].to_i
-            _end = ps[1].to_i
-            (_start.._end).each do|p|
-              course_days << DAYS[m[:d]]
-              course_periods << p
-              course_locations << m[:loc]
+
+        if course["time_inf"] && course["time_inf"].match(/(?<d>[#{DAYS.keys.join}])(?<p>[#{PERIODS.keys.join}]+)；(?<loc>.+)。/)
+          # course["dept_chiabbr"].include?('臺大')
+          # 二3；請洽系所辦。五34；請洽系所辦。
+          course["time_inf"].scan(/(?<d>[#{DAYS.keys.join}])(?<p>[#{PERIODS.keys.join}]+)；(?<loc>.+)。/).each do |m|
+
+            m[1].split('').each do |p|
+              course_days << DAYS[m[0]]
+              course_periods << PERIODS[p]
+              course_locations << m[2]
             end
           end
-        end
+
+        elsif course["time_inf"] && course["time_inf"].match(/(?<d>[#{NTUST_DAYS.keys.join}])(?<p>\d)\((?<loc>.+)\)/)
+          # course["dept_chiabbr"].include?('臺科大')
+          # R2(RB-707)、R3(RB-707)、R4(RB-707) 多麼熟悉！
+          course["time_inf"].scan(/(?<d>[#{NTUST_DAYS.keys.join}])(?<p>\d)\((?<loc>.+)\)/).each do |m|
+            course_days << NTUST_DAYS[m[0]]
+            course_periods << PERIODS[m[1]]
+            course_locations << m[2]
+          end
+
+        else
+          # course["time_inf"] = '一 9-10 本部 音樂系演奏廳,五 9-10 本部 音樂系演奏廳,'
+          course["time_inf"] && course["time_inf"].split(',').each do |time_info|
+            time_info.match(/(?<d>[#{DAYS.keys.join}]) (?<p>[\d\-#{PERIODS.keys.join}]+) (?<loc>.+)/) do |m|
+              if !m[:p].include?('-')
+                course_days << DAYS[m[:d]]
+                course_periods << PERIODS[p]
+                course_locations << m[:loc]
+              else
+                ps = m[:p].split('-')
+                _start = PERIODS[ps[0]]
+                _end = PERIODS[ps[1]]
+                (_start.._end).each do|p|
+                  course_days << DAYS[m[:d]]
+                  course_periods << p
+                  course_locations << m[:loc]
+                end
+              end # end if
+            end
+          end
+        end # end parse time_loc
 
         lec_md5 = Digest::MD5.hexdigest(course["teacher"])
         general_code = "#{course["course_code"]}-#{lec_md5[0..4]}#{lec_md5[-5..-1]}"
