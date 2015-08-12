@@ -5,6 +5,8 @@ require 'pry'
 require 'thread'
 require 'thwait'
 
+require 'digest'
+
 class NtnuCourseCrawler
 
   DAYS = {
@@ -243,8 +245,8 @@ class NtnuCourseCrawler
         begin
           respond = RestClient.get @url, params: url_params_for_department(department: dep_code, year: @year-1911, term: @term)
           respond = JSON.parse(respond.to_s)
-        rescue
-          print "Error on #{dep_code}! retry later...\n"
+        rescue Exception => e
+          print "Error on #{dep_code}! #{e}! retry later...\n"
           sleep(1)
           redo
         end
@@ -273,7 +275,7 @@ class NtnuCourseCrawler
 
         done_departments_count += 1
         print "(#{done_departments_count}/#{DEPARTMENTS.count}) done #{dep_code}\n"
-      end
+      end # end Thread
     end
     ThreadsWait.all_waits(*@threads)
 
@@ -286,7 +288,7 @@ class NtnuCourseCrawler
   end
 
   private
-    def url_params_for_department(department: department, year: nil, term: nil, language: 'chinese')
+    def url_params_for_department(department: nil, year: nil, term: nil, language: 'chinese')
       {
         acadmYear: year,
         acadmTerm: term,
@@ -343,12 +345,16 @@ class NtnuCourseCrawler
             end
           end
         end
+
+        lec_md5 = Digest::MD5.hexdigest(course["teacher"])
+        general_code = "#{course["course_code"]}-#{lec_md5[0..4]}#{lec_md5[-5..-1]}"
+
         course = {
           year: course["acadm_year"].to_i+1911,
           term: course["acadm_term"].to_i,
           name: course["chn_name"],
-          code: "#{course["acadm_year"]}-#{course["acadm_term"]}-#{course["course_code"]}",
-          general_code: course["course_code"],
+          code: "#{course["acadm_year"]}-#{course["acadm_term"]}-#{course["course_code"]}-#{course["serial_no"]}",
+          general_code: general_code,
           credits: course["credit"].to_i,
           department: course["dept_chiabbr"],
           department_code: course["dept_code"],
@@ -398,5 +404,5 @@ class NtnuCourseCrawler
     end
 end
 
-# cc = NtnuCourseCrawler.new(year: 2014, term: 1)
+# cc = NtnuCourseCrawler.new(year: 2015, term: 1)
 # File.write('ntnu_courses.json', JSON.pretty_generate(cc.courses))
