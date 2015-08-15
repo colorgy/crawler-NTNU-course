@@ -409,13 +409,14 @@ class NtnuCourseCrawler
 
         lec_md5 = Digest::MD5.hexdigest(course["teacher"])
         general_code = "#{course["course_code"]}-#{lec_md5[0..4]}#{lec_md5[-5..-1]}"
+        # 也許 code 也要抽掉 serial_no 改成 general_code 這樣了......
 
         course = {
           year: course["acadm_year"].to_i+1911,
           term: course["acadm_term"].to_i,
           name: course["chn_name"],
           code: "#{course["acadm_year"]}-#{course["acadm_term"]}-#{course["course_code"]}-#{course["serial_no"]}",
-          general_code: general_code,
+          general_code: course["serial_no"],
           credits: course["credit"].to_i,
           department: course["dept_chiabbr"],
           department_code: course["dept_code"],
